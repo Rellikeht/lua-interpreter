@@ -1,14 +1,16 @@
+(* https://www.lua.org/manual/5.1/manual.html *)
+
 Name = "[_a-zA-Z][_a-zA-Z0-9]*"
 
 String = '"(\"|[^"])*"'
 
 Number = "[+-]?[0-9]+([.][0-9]*)?([eE][+-]?[0-9]+)?"
 
-chunk = {stat [";"]} [laststat [";"]]
-
 comment = "--.*"
 
 block = chunk
+
+chunk = {stat [";"]} [laststat [";"]]
 
 stat =  varlist "=" explist | 
      functioncall | 
@@ -34,7 +36,7 @@ namelist = Name {"," Name}
 
 explist = {exp ","} exp
 
-exp =  "nil" | "false" | "true" | Number | String | "..." | "function" | 
+exp =  "nil" | "false" | "true" | Number | String | "..." | function | 
      prefixexp | tableconstructor | exp binop exp | unop exp 
 
 prefixexp = var | functioncall | "(" exp ")"
