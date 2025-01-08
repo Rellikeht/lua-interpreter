@@ -1,0 +1,53 @@
+type token =
+  | BREAK
+  | IF
+  | WHILE
+  | VARARG
+  | UNTIL
+  | TRUE
+  | THEN
+  | SEMICOLON
+  | RSQUARE
+  | RPAREN
+  | RETURN
+  | REPEAT
+  | RBRACE
+  | POWER
+  | PLUS
+  | OR
+  | NOTEQUAL
+  | NOT
+  | NIL
+  | MULTIPLY
+  | MODULO
+  | MINUS
+  | LSQARE
+  | LPAREN
+  | LOCAL
+  | LESSEQUAL
+  | LESS
+  | LENGTH
+  | LBRACE
+  | IN
+  | GREATEREQUAL
+  | GREATER
+  | FUNCTION
+  | FOR
+  | FALSE
+  | EQUAL
+  | EOF
+  | END
+  | ELSEIF
+  | ELSE
+  | DOT
+  | DO
+  | DIVIDE
+  | CONCAT
+  | COMMA
+  | COLON
+  | ASSIGN
+  | AND
+  | STRING of string
+  | NUMBER of float
+  | NAME of string
+[@@deriving show]

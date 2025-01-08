@@ -1,0 +1,9 @@
+(executable
+ (public_name lua_interpreter)
+ (name main)
+ (libraries interpreter base stdio))
+
+; (executable
+;  (public_name lua_interpreter2)
+;  (name main2)
+;  (libraries interpreter2 base stdio))

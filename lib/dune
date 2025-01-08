@@ -1,0 +1,15 @@
+(menhir
+ (flags --external-tokens Token)
+ (modules parser))
+
+(ocamllex lexer)
+
+(library
+ (name interpreter)
+ (modules parser lexer ast printing token)
+ (preprocess
+  (pps ppx_show))
+ ; (preprocess
+ ; (pps ppx_deriving.show))
+ ; (libraries base stdio))
+ (libraries base stdio ppx_show.runtime))
