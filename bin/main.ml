@@ -7,4 +7,4 @@ if Array.length Sys.argv < 2 then (
   exit 1)
 ;;
 
-Printing.dump_tree filename
+Printing.dump_tree ~tokens:true filename

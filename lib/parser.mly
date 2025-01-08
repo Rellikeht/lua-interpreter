@@ -17,9 +17,6 @@
 %token LENGTH ASSIGN DOT CONCAT VARARG
 %token EOF
 
-(* %nonassoc THEN *)
-(* %nonassoc ELSE *)
-
 %left OR
 %left AND
 %left LESS LESSEQUAL GREATER GREATEREQUAL EQUAL NOTEQUAL
@@ -115,7 +112,7 @@ functioncall:
 ;
 
 args:
-  | LPAREN el = separated_list(COMMA, exp) RPAREN { Args el }
+  | LPAREN el = separated_list(COMMA, exp) option(COMMA) RPAREN { Args el }
   | t = tableconstructor { Table t }
   | s = STRING { String s }
 ;

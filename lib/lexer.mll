@@ -6,13 +6,15 @@ open Token
 
 let dig = ['0'-'9']
 let sign = ['-' '+']
+let intn = sign? dig+
+let name_start = ['a'-'z' 'A'-'Z' '_']
+let name_rest = ['a'-'z' 'A'-'Z' '0'-'9' '_']
 
 rule token = parse
   | [' ' '\t' '\n' 'r'] { token lexbuf } (* Skip whitespace *)
   | '-''-'_* { token lexbuf }
 
-  | sign? dig+(['.']dig*)?(['e' 'E']sign?dig+)? as n
-    { NUMBER (float_of_string n) }
+  | intn(['.']dig*)?(['e' 'E']intn)? as n { NUMBER (float_of_string n) }
   | '"' [^'"']* '"' as s { STRING (String.sub s 1 (String.length s - 2)) }
 
   | "break" { BREAK }
@@ -68,8 +70,6 @@ rule token = parse
   | ".." { CONCAT }
   | '.' { DOT }
 
-  | ['a'-'z' 'A'-'Z' '_']['a'-'z' 'A'-'Z' '0'-'9' '_']* as name
-    { NAME name }
-
+  | name_start name_rest* as name { NAME name }
   | eof { EOF }
   | _ as c { failwith (Printf.sprintf "unexpected character: %C" c) }
