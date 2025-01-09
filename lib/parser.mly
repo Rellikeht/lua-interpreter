@@ -35,8 +35,9 @@ program:
 ;
 
 chunk:
-  | s = separated_list(option(SEMICOLON), stat) { Statements s }
-  | s = separated_list(option(SEMICOLON), stat) l = laststat { Ended (s, l) }
+  | s = list(terminated(stat, option(SEMICOLON))) { Statements s }
+  | s = list(terminated(stat, option(SEMICOLON)))
+    l = laststat option(SEMICOLON) { Ended (s, l) }
 ;
 
 %inline block:
@@ -121,14 +122,14 @@ args:
   | LPAREN pl = parlist RPAREN b = block END { (pl, b) }
 ;
 
-parlist:
+%inline parlist:
   | nl = separated_nonempty_list(COMMA, NAME) COMMA VARARG { VarargList nl }
-  | nl = separated_list(COMMA, NAME) { List nl }
+  | nl = separated_list(COMMA, NAME) option(COMMA) { List nl }
   | VARARG { Varparam }
 ;
 
 %inline tableconstructor:
-  | LBRACE fl = separated_list(fieldsep, field) RBRACE { fl }
+  | LBRACE fl = separated_list(fieldsep, field) option(fieldsep) RBRACE { fl }
 ;
 
 field:

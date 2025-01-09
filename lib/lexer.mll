@@ -12,7 +12,7 @@ let name_rest = ['a'-'z' 'A'-'Z' '0'-'9' '_']
 
 rule token = parse
   | [' ' '\t' '\n' 'r'] { token lexbuf } (* Skip whitespace *)
-  | '-''-'_* { token lexbuf }
+  | '-''-'[^'\n' '\r']* { token lexbuf }
 
   | intn(['.']dig*)?(['e' 'E']intn)? as n { NUMBER (float_of_string n) }
   | '"' [^'"']* '"' as s { STRING (String.sub s 1 (String.length s - 2)) }
@@ -47,12 +47,12 @@ rule token = parse
   | '%' { MODULO }
   | '^' { POWER }
 
-  | "<" { LESS }
   | "<=" { LESSEQUAL }
-  | ">" { GREATER }
+  | "<" { LESS }
   | ">=" { GREATEREQUAL }
-  | "==" { EQUAL }
+  | ">" { GREATER }
   | "~=" { NOTEQUAL }
+  | "==" { EQUAL }
 
   | '(' { LPAREN }
   | ')' { RPAREN }
