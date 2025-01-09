@@ -1,9 +1,39 @@
 open Ast
 open State
+open Base
 
 let add_function (s : state) (n : funcname) (b : parameter_list * chunk) = ()
+let update_locals (s : state) (ns : name list) (es : exp list) = ()
 
-let rec call_func (s : state) (funcall : function_call) = ()
+let rec exec_exp (e : exp) =
+  match e with
+  | Nil -> Value Nil
+  | False -> Value False
+  | True -> Value True
+  | Number n -> Value (Number n)
+  | Vararg -> raise (Invalid_argument "Vararg")
+  | _ -> Value Nil
+
+and call_builtin (f : builtin_func) (s : state) (a : exp list) =
+  let args = List.map ~f:exec_exp a in
+  f s args
+
+and call_func (s : state) (funcall : function_call) =
+  match funcall with
+  (* *)
+  | Function (prefix, args) -> (
+      match prefix with
+      | Var var -> (
+          match var with
+          (* *)
+          | Named name -> (
+              match Hashtbl.find s.symbols name with
+              | None -> () (* TODO raise *)
+              | Some (Builtin f) -> call_builtin f s args
+              | _ -> ())
+          | _ -> ())
+      | _ -> ())
+  | _ -> ()
 
 and exec_last (s : state) = function
   (* *)
@@ -25,8 +55,9 @@ and exec_statement (state : state) =
  (* | For of name * exp * exp * exp option * block *)
  (* | ForIn of name list * exp list * block *)
  | Function (name, body) -> add_function state name body
- (* | LocalFunction of name * funcbody *)
- (* | Local of name list * exp list *)
+ (* | LocalFunction (name, funcbody) -> *)
+ (*     update_locals state [ name ] [ Func funcbody ] *)
+ (* | Local (names, exps) -> update_locals state names exps *)
  | _ -> ())
 
 and exec_statements (state : state) (ss : statement list)
@@ -39,7 +70,7 @@ and exec_statements (state : state) (ss : statement list)
   (*   | None -> () *)
   (*   | Some last -> exec_last state last *)
   (* end *)
-  | [] -> Option.bind last (fun x -> Some (exec_last state x))
+  | [] -> Option.bind last ~f:(fun x -> Some (exec_last state x))
 
 and exec_chunk (state : state) = function
   | Statements ss -> exec_statements state ss None

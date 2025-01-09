@@ -71,14 +71,15 @@ and field =
 (* funcbody = "(" [parlist] ")" block "end" *)
 and funcbody = parameter_list * block [@@deriving show]
 
-and args =
-  (* args =  "(" [explist] ")" | *)
-  | Args of exp list
-  (*   tableconstructor | *)
-  | Table of field list
-  (*   String *)
-  | String of string
-[@@deriving show]
+(* and args = *)
+(*   (1* args =  "(" [explist] ")" | *1) *)
+(*   | Args of exp list *)
+(*   (1*   tableconstructor | *1) *)
+(*   | Table of field list *)
+(*   (1*   String *1) *)
+(*   | String of string *)
+(* [@@deriving show] *)
+and args = exp list
 
 (* functioncall =  prefixexp args | prefixexp ":" Name args *)
 and function_call =

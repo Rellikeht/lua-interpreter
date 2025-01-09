@@ -11,7 +11,8 @@ let name_start = ['a'-'z' 'A'-'Z' '_']
 let name_rest = ['a'-'z' 'A'-'Z' '0'-'9' '_']
 
 rule token = parse
-  | [' ' '\t' '\n' 'r'] { token lexbuf } (* Skip whitespace *)
+  (* | [' ' '\t' '\n' 'r'] { token lexbuf } *)
+  | [' ' '\t']+ { token lexbuf }
   | '-''-'[^'\n' '\r']* { token lexbuf }
 
   | intn(['.']dig*)?(['e' 'E']intn)? as n { NUMBER (float_of_string n) }
@@ -71,5 +72,9 @@ rule token = parse
   | '.' { DOT }
 
   | name_start name_rest* as name { NAME name }
+  (* | ['\n' 'r'] | ('\n' '\r') | ('\r' '\n') *)
+  (*   { Lexing.new_line lexbuf; token lexbuf } *)
+  | ['\n' 'r'] | ('\n' '\r') | ('\r' '\n') { token lexbuf }
+
   | eof { EOF }
   | _ as c { failwith (Printf.sprintf "unexpected character: %C" c) }

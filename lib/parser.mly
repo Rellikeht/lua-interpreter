@@ -112,11 +112,17 @@ functioncall:
   | p = prefixexp COLON n = NAME a = args { Method (p, n, a) }
 ;
 
-args:
-  | LPAREN el = separated_list(COMMA, exp) option(COMMA) RPAREN { Args el }
-  | t = tableconstructor { Table t }
-  | s = STRING { String s }
+%inline args:
+  | LPAREN el = separated_list(COMMA, exp) option(COMMA) RPAREN { el }
+  | t = tableconstructor { [Table t] }
+  | s = STRING { [String s] }
 ;
+
+(* args: *)
+(*   | LPAREN el = separated_list(COMMA, exp) option(COMMA) RPAREN { Args el } *)
+(*   | t = tableconstructor { Table t } *)
+(*   | s = STRING { String s } *)
+(* ; *)
 
 %inline funcbody:
   | LPAREN pl = parlist RPAREN b = block END { (pl, b) }
