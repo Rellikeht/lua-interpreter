@@ -2,8 +2,7 @@ open Ast
 open State
 open Base
 
-let add_function (s : state) (n : funcname) (b : parameter_list * chunk) = ()
-let update_locals (s : state) (ns : name list) (es : exp list) = ()
+exception Unimplemented
 
 let rec exec_exp (e : exp) =
   match e with
@@ -21,44 +20,40 @@ and call_builtin (f : builtin_func) (s : state) (a : exp list) =
 and call_func (s : state) (funcall : function_call) =
   match funcall with
   (* *)
-  | Function (prefix, args) -> (
-      match prefix with
-      (* | Var var -> ( *)
-      (*     match var with *)
-      (*     (1* *1) *)
-      (*     | Named name -> ( *)
-      (*         match Hashtbl.find s.symbols name with *)
-      (*         | None -> () (1* TODO raise *1) *)
-      (*         | Some (Builtin f) -> call_builtin f s args *)
-      (*         | _ -> ()) *)
-      (*     | _ -> ()) *)
+  | Function (var, args) -> (
+      match var with
+      (* *)
+      | Named name -> (
+          match Hashtbl.find s.symbols name with
+          | None -> () (* TODO raise *)
+          | Some (Builtin f) -> call_builtin f s args
+          | _ -> ())
       | _ -> ())
   | _ -> ()
 
 and exec_last (s : state) = function
   (* *)
-  | Break -> ()
-  | Return _ -> ()
+  | Break -> raise Unimplemented
+  | Return _ -> raise Unimplemented
 
-and exec_statement (state : state) =
- (function
- | Assignment (names, vals) -> ()
- (* | Call funcall -> call_func state funcall *)
- (* | Do block -> ( *)
- (*     (1* *1) *)
- (*     match block with *)
- (*     | Statements statements -> exec_chunk state statements None *)
- (*     | Ended (statements, last) -> exec_chunk state statements (Some last)) *)
- (* | While of exp * block *)
- (* | Repeat of block * exp *)
- (* | If of exp * block * elseif list * block option *)
- (* | For of name * exp * exp * exp option * block *)
- (* | ForIn of name list * exp list * block *)
- | Function (name, body) -> add_function state name body
- (* | LocalFunction (name, funcbody) -> *)
- (*     update_locals state [ name ] [ Func funcbody ] *)
- (* | Local (names, exps) -> update_locals state names exps *)
- | _ -> ())
+and exec_statement (state : state) = function
+  | Assignment (names, vals) -> raise Unimplemented
+  | Call funcall -> call_func state funcall
+  (* | Do block -> ( *)
+  (*     (1* *1) *)
+  (*     match block with *)
+  (*     | Statements statements -> exec_chunk state statements None *)
+  (*     | Ended (statements, last) -> exec_chunk state statements (Some last)) *)
+  (* | While of exp * block *)
+  (* | Repeat of block * exp *)
+  (* | If of exp * block * elseif list * block option *)
+  | For (name, start, last, step, body) -> raise Unimplemented
+  | ForIn (names, exps, body) -> raise Unimplemented
+  | Function (name, body) -> add_function state name body
+  | LocalFunction (name, funcbody) ->
+      update_locals state [ name ] [ Func funcbody ]
+  | Local (names, exps) -> update_locals state names exps
+  | _ -> ()
 
 and exec_statements (state : state) (ss : statement list)
     (last : last_statement option) =

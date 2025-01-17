@@ -36,3 +36,6 @@ let initial_state () =
     line = 0;
     symbols = Hashtbl.copy initial_symbols;
   }
+
+let add_function (s : state) (n : funcname) (b : parameter_list * chunk) = ()
+let update_locals (s : state) (ns : name list) (es : exp list) = ()

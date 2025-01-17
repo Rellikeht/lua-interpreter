@@ -34,17 +34,20 @@ program:
   | c = chunk EOF { c }
 ;
 
-%inline chunk:
+(* can be inline *)
+chunk:
   | s = list(terminated(stat, option(SEMICOLON))) { Statements s }
   | s = list(terminated(stat, option(SEMICOLON)))
     l = laststat option(SEMICOLON) { Ended (s, l) }
 ;
 
-%inline block:
+(* can be inline *)
+block:
   | b = chunk { b }
 ;
 
-%inline laststat:
+(* can be inline *)
+laststat:
   | RETURN e = separated_list(COMMA, exp) { Return e }
   | BREAK { Break }
 ;
@@ -70,15 +73,18 @@ stat:
     { Local (nl, el) }
 ;
 
-%inline elseif_block:
+(* can be inline *)
+elseif_block:
   | ELSEIF e = exp THEN b = block { (e, b) }
 ;
 
-%inline else_block:
+(* can be inline *)
+else_block:
   | ELSE b = block { b }
 ;
 
-%inline funcname:
+(* can be inline *)
+funcname:
   | n = NAME nl = list(preceded(DOT, NAME)) mn = option(preceded(COLON, NAME))
     { (n, nl, mn) }
 ;
@@ -120,17 +126,20 @@ args:
   | s = STRING { [String s] }
 ;
 
-%inline funcbody:
+(* can be inline *)
+funcbody:
   | LPAREN pl = parlist RPAREN b = block END { (pl, b) }
 ;
 
-%inline parlist:
+(* can be inline *)
+parlist:
   | nl = nonempty_list(terminated(NAME, COMMA)) VARARG { VarargList nl }
   | nl = separated_list(COMMA, NAME) { List nl }
   | VARARG { Varparam }
 ;
 
-%inline tableconstructor:
+(* can be inline *)
+tableconstructor:
   | LBRACE fl = separated_list(fieldsep, field) RBRACE { fl }
 ;
 
@@ -140,7 +149,8 @@ field:
   | e = exp { Free e }
 ;
 
-%inline fieldsep:
+(* can be inline *)
+fieldsep:
   | COMMA { Comma }
   | SEMICOLON { Semicolon }
 ;

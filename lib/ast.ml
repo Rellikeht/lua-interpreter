@@ -71,8 +71,11 @@ and field =
 and funcbody = parameter_list * block [@@deriving show]
 and args = exp list
 
-(* functioncall =  prefixexp args | prefixexp ":" Name args *)
-and function_call = Function of var * args | Method of var * name * args
+and function_call =
+  (* functioncall = prefixexp args | *)
+  | Function of var * args
+  (* prefixexp ":" Name args *)
+  | Method of var * name * args
 [@@deriving show]
 
 and prefixexp =
@@ -109,9 +112,8 @@ and exp =
   | UnaryOp of unary_op * exp
 [@@deriving show]
 
-(* var = *)
 and var =
-  (* Name | *)
+  (* var = Name | *)
   | Named of name
   (* prefixexp "[" exp "]" | *)
   | Index of name * exp
