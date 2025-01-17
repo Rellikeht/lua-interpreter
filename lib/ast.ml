@@ -53,7 +53,6 @@ type chunk =
   (* *)
   | Statements of statement list
   | Ended of statement list * last_statement
-(* | Empty *)
 [@@deriving show]
 
 (* block = chunk *)
@@ -73,11 +72,7 @@ and funcbody = parameter_list * block [@@deriving show]
 and args = exp list
 
 (* functioncall =  prefixexp args | prefixexp ":" Name args *)
-and function_call =
-  (* | Function of prefixexp * args *)
-  (* | Method of prefixexp * name * args *)
-  | Function of var * args
-  | Method of var * name * args
+and function_call = Function of var * args | Method of var * name * args
 [@@deriving show]
 
 and prefixexp =
@@ -105,8 +100,7 @@ and exp =
   (*  function | *)
   | Func of funcbody
   (*  prefixexp | *)
-  (* | Prefixexp of prefixexp *)
-  | Var of var
+  | Prefixexp of prefixexp
   (*  tableconstructor | *)
   | Table of field list
   (*  exp binop exp | *)
@@ -120,10 +114,8 @@ and var =
   (* Name | *)
   | Named of name
   (* prefixexp "[" exp "]" | *)
-  (* | Index of prefixexp * exp *)
   | Index of name * exp
   (* prefixexp "." Name *)
-  (* | Prefix of prefixexp * name *)
   | Prefix of name * name
 [@@deriving show]
 

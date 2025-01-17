@@ -34,7 +34,7 @@ program:
   | c = chunk EOF { c }
 ;
 
-chunk:
+%inline chunk:
   | s = list(terminated(stat, option(SEMICOLON))) { Statements s }
   | s = list(terminated(stat, option(SEMICOLON)))
     l = laststat option(SEMICOLON) { Ended (s, l) }
@@ -44,7 +44,7 @@ chunk:
   | b = chunk { b }
 ;
 
-laststat:
+%inline laststat:
   | RETURN e = separated_list(COMMA, exp) { Return e }
   | BREAK { Break }
 ;
@@ -58,7 +58,7 @@ stat:
   | REPEAT b = block UNTIL e = exp { Repeat (b, e) }
   | IF e = exp THEN b = block el = list(elseif_block) els = option(else_block) END
     { If (e, b, el, els) }
-  | FOR n = NAME ASSIGN e1 = exp COMMA e2 = exp COMMA e3 = option(exp) DO b = block END
+  | FOR n = NAME ASSIGN e1 = exp COMMA e2 = exp e3 = option(preceded(COMMA, exp)) DO b = block END
     { For (n, e1, e2, e3, b) }
   | FOR nl = separated_nonempty_list(COMMA, NAME)
     IN el = separated_nonempty_list(COMMA, exp)
@@ -70,11 +70,11 @@ stat:
     { Local (nl, el) }
 ;
 
-elseif_block:
+%inline elseif_block:
   | ELSEIF e = exp THEN b = block { (e, b) }
 ;
 
-else_block:
+%inline else_block:
   | ELSE b = block { b }
 ;
 
@@ -82,12 +82,6 @@ else_block:
   | n = NAME nl = list(preceded(DOT, NAME)) mn = option(preceded(COLON, NAME))
     { (n, nl, mn) }
 ;
-
-(* var: *)
-(*   | n = NAME { Named n } *)
-(*   | p = prefixexp LSQARE e = exp RSQUARE { Index (p, e) } *)
-(*   | p = prefixexp DOT n = NAME { Prefix (p, n) } *)
-(* ; *)
 
 var:
   | n = NAME { Named n }
@@ -103,30 +97,24 @@ exp:
   | s = STRING { String s }
   | VARARG { Vararg }
   | FUNCTION fb = funcbody { Func fb }
-  (* | p = prefixexp { Prefixexp p } *)
-  | p = var { Var p }
+  | p = prefixexp { Prefixexp p }
   | t = tableconstructor { Table t }
   | e1 = exp op = binop e2 = exp { BinaryOp (op, e1, e2) }
   | op = unop e = exp { UnaryOp (op, e) }
 ;
 
-(* prefixexp: *)
-(*   | v = var { Var v } *)
-(*   | f = functioncall { Call f } *)
-(*   | LPAREN e = exp RPAREN { Exp e } *)
-(* ; *)
-
-(* functioncall: *)
-(*   | p = prefixexp a = args { Function (p, a) } *)
-(*   | p = prefixexp COLON n = NAME a = args { Method (p, n, a) } *)
-(* ; *)
+prefixexp:
+  | v = var { Var v }
+  | f = functioncall { Call f }
+  | LPAREN e = exp RPAREN { Exp e }
+;
 
 functioncall:
   | p = var a = args { Function (p, a) }
   | p = var COLON n = NAME a = args { Method (p, n, a) }
 ;
 
-%inline args:
+args:
   | LPAREN el = separated_list(COMMA, exp) RPAREN { el }
   | t = tableconstructor { [Table t] }
   | s = STRING { [String s] }
