@@ -70,21 +70,14 @@ and field =
 
 (* funcbody = "(" [parlist] ")" block "end" *)
 and funcbody = parameter_list * block [@@deriving show]
-
-(* and args = *)
-(*   (1* args =  "(" [explist] ")" | *1) *)
-(*   | Args of exp list *)
-(*   (1*   tableconstructor | *1) *)
-(*   | Table of field list *)
-(*   (1*   String *1) *)
-(*   | String of string *)
-(* [@@deriving show] *)
 and args = exp list
 
 (* functioncall =  prefixexp args | prefixexp ":" Name args *)
 and function_call =
-  | Function of prefixexp * args
-  | Method of prefixexp * name * args
+  (* | Function of prefixexp * args *)
+  (* | Method of prefixexp * name * args *)
+  | Function of var * args
+  | Method of var * name * args
 [@@deriving show]
 
 and prefixexp =
@@ -112,7 +105,8 @@ and exp =
   (*  function | *)
   | Func of funcbody
   (*  prefixexp | *)
-  | Prefixexp of prefixexp
+  (* | Prefixexp of prefixexp *)
+  | Var of var
   (*  tableconstructor | *)
   | Table of field list
   (*  exp binop exp | *)
@@ -121,11 +115,16 @@ and exp =
   | UnaryOp of unary_op * exp
 [@@deriving show]
 
-(* var = Name | prefixexp "[" exp "]" | prefixexp "." Name *)
+(* var = *)
 and var =
+  (* Name | *)
   | Named of name
-  | Index of prefixexp * exp
-  | Prefix of prefixexp * name
+  (* prefixexp "[" exp "]" | *)
+  (* | Index of prefixexp * exp *)
+  | Index of name * exp
+  (* prefixexp "." Name *)
+  (* | Prefix of prefixexp * name *)
+  | Prefix of name * name
 [@@deriving show]
 
 (* laststat = "return" [explist] | "break" *)

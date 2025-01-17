@@ -21,18 +21,18 @@ and call_builtin (f : builtin_func) (s : state) (a : exp list) =
 and call_func (s : state) (funcall : function_call) =
   match funcall with
   (* *)
-  | Function (prefix, args) -> (
-      match prefix with
-      | Var var -> (
-          match var with
-          (* *)
-          | Named name -> (
-              match Hashtbl.find s.symbols name with
-              | None -> () (* TODO raise *)
-              | Some (Builtin f) -> call_builtin f s args
-              | _ -> ())
-          | _ -> ())
-      | _ -> ())
+  (* | Function (prefix, args) -> ( *)
+  (*     match prefix with *)
+  (*     | Var var -> ( *)
+  (*         match var with *)
+  (*         (1* *1) *)
+  (*         | Named name -> ( *)
+  (*             match Hashtbl.find s.symbols name with *)
+  (*             | None -> () (1* TODO raise *1) *)
+  (*             | Some (Builtin f) -> call_builtin f s args *)
+  (*             | _ -> ()) *)
+  (*         | _ -> ()) *)
+  (*     | _ -> ()) *)
   | _ -> ()
 
 and exec_last (s : state) = function

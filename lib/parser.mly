@@ -60,7 +60,9 @@ stat:
     { If (e, b, el, els) }
   | FOR n = NAME ASSIGN e1 = exp COMMA e2 = exp COMMA e3 = option(exp) DO b = block END
     { For (n, e1, e2, e3, b) }
-  | FOR nl = separated_nonempty_list(COMMA, NAME) IN el = separated_nonempty_list(COMMA, exp) DO b = block END
+  | FOR nl = separated_nonempty_list(COMMA, NAME)
+    IN el = separated_nonempty_list(COMMA, exp)
+    DO b = block END
     { ForIn (nl, el, b) }
   | FUNCTION fn = funcname fb = funcbody { Function (fn, fb) }
   | LOCAL FUNCTION n = NAME fb = funcbody { LocalFunction (n, fb) }
@@ -81,10 +83,16 @@ else_block:
     { (n, nl, mn) }
 ;
 
+(* var: *)
+(*   | n = NAME { Named n } *)
+(*   | p = prefixexp LSQARE e = exp RSQUARE { Index (p, e) } *)
+(*   | p = prefixexp DOT n = NAME { Prefix (p, n) } *)
+(* ; *)
+
 var:
   | n = NAME { Named n }
-  | p = prefixexp LSQARE e = exp RSQUARE { Index (p, e) }
-  | p = prefixexp DOT n = NAME { Prefix (p, n) }
+  | n = NAME LSQARE e = exp RSQUARE { Index (n, e) }
+  | n1 = NAME DOT n2 = NAME { Prefix (n1, n2) }
 ;
 
 exp:
@@ -95,47 +103,47 @@ exp:
   | s = STRING { String s }
   | VARARG { Vararg }
   | FUNCTION fb = funcbody { Func fb }
-  | p = prefixexp { Prefixexp p }
+  (* | p = prefixexp { Prefixexp p } *)
+  | p = var { Var p }
   | t = tableconstructor { Table t }
   | e1 = exp op = binop e2 = exp { BinaryOp (op, e1, e2) }
   | op = unop e = exp { UnaryOp (op, e) }
 ;
 
-prefixexp:
-  | v = var { Var v }
-  | f = functioncall { Call f }
-  | LPAREN e = exp RPAREN { Exp e }
-;
+(* prefixexp: *)
+(*   | v = var { Var v } *)
+(*   | f = functioncall { Call f } *)
+(*   | LPAREN e = exp RPAREN { Exp e } *)
+(* ; *)
+
+(* functioncall: *)
+(*   | p = prefixexp a = args { Function (p, a) } *)
+(*   | p = prefixexp COLON n = NAME a = args { Method (p, n, a) } *)
+(* ; *)
 
 functioncall:
-  | p = prefixexp a = args { Function (p, a) }
-  | p = prefixexp COLON n = NAME a = args { Method (p, n, a) }
+  | p = var a = args { Function (p, a) }
+  | p = var COLON n = NAME a = args { Method (p, n, a) }
 ;
 
 %inline args:
-  | LPAREN el = separated_list(COMMA, exp) option(COMMA) RPAREN { el }
+  | LPAREN el = separated_list(COMMA, exp) RPAREN { el }
   | t = tableconstructor { [Table t] }
   | s = STRING { [String s] }
 ;
-
-(* args: *)
-(*   | LPAREN el = separated_list(COMMA, exp) option(COMMA) RPAREN { Args el } *)
-(*   | t = tableconstructor { Table t } *)
-(*   | s = STRING { String s } *)
-(* ; *)
 
 %inline funcbody:
   | LPAREN pl = parlist RPAREN b = block END { (pl, b) }
 ;
 
 %inline parlist:
-  | nl = separated_nonempty_list(COMMA, NAME) COMMA VARARG { VarargList nl }
-  | nl = separated_list(COMMA, NAME) option(COMMA) { List nl }
+  | nl = nonempty_list(terminated(NAME, COMMA)) VARARG { VarargList nl }
+  | nl = separated_list(COMMA, NAME) { List nl }
   | VARARG { Varparam }
 ;
 
 %inline tableconstructor:
-  | LBRACE fl = separated_list(fieldsep, field) option(fieldsep) RBRACE { fl }
+  | LBRACE fl = separated_list(fieldsep, field) RBRACE { fl }
 ;
 
 field:
