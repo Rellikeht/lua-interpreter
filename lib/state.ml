@@ -3,8 +3,10 @@ open Values
 open Base
 module Name = String
 
+let fresh_level () = Hashtbl.create (module Name)
+
 let initial_symbols : (name, value) Hashtbl.t =
-  let symbols = Hashtbl.create (module Name) in
+  let symbols = fresh_level () in
   let _ =
     Hashtbl.add symbols ~key:"print" ~data:(Builtin lua_print)
   in
@@ -15,7 +17,7 @@ let initial_state () =
     (* *)
     (* line = 0; *)
     globals = Hashtbl.copy initial_symbols;
-    locals = [];
+    locals = [ fresh_level () ];
     breaking = false;
     returning = false;
   }
@@ -33,34 +35,27 @@ let get_value (state : state) (name : name) : value option =
   | Some v -> Some v
   | None -> Hashtbl.find state.globals name
 
-let set_local (state : state) (name : name) (v : value) =
-  let rec setl = function
+let set_value (state : state) (name : name) (value : value) : unit =
+  let rec set_local = function
     | [] -> false
     | level :: rest -> begin
         match Hashtbl.find level name with
-        | Some _ -> begin
+        | Some v -> begin
             Hashtbl.set level ~key:name ~data:v;
             true
           end
-        | None -> setl rest
+        | None -> set_local rest
       end
   in
-  if setl state.locals then
+  if set_local state.locals then
     ()
   else
-    let level =
-      match state.locals with
-      | level :: _ -> level
-      | [] -> begin
-          let fresh = Hashtbl.create (module Name) in
-          state.locals <- [ fresh ];
-          fresh
-        end
-    in
-    Hashtbl.set level ~key:name ~data:v
+    Hashtbl.set state.globals ~key:name ~data:value
 
-let set_global (state : state) (name : name) (v : value) =
-  Hashtbl.set state.globals ~key:name ~data:v
+let set_local (state : state) (name : name) (v : value) =
+  match state.locals |> List.hd with
+  | None -> raise Unreachable
+  | Some level -> Hashtbl.set level ~key:name ~data:v
 
 let add_function
     (state : state)

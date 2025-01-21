@@ -91,6 +91,8 @@ funcname:
 
 var:
   | n = NAME { Named n }
+  (* | p = prefixexp LSQARE e = exp RSQUARE { Index (p, e) } *)
+  (* | p = prefixexp DOT n = NAME { Prefix (p, n) } *)
   | n = NAME LSQARE e = exp RSQUARE { Index (n, e) }
   | n1 = NAME DOT n2 = NAME { Prefix (n1, n2) }
 ;

@@ -116,8 +116,10 @@ and var =
   (* var = Name | *)
   | Named of name
   (* prefixexp "[" exp "]" | *)
+  (* | Index of prefixexp * exp *)
   | Index of name * exp
   (* prefixexp "." Name *)
+  (* | Prefix of prefixexp * name *)
   | Prefix of name * name
 [@@deriving show]
 

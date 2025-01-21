@@ -10,7 +10,7 @@ type simple_value =
   | String of string
   | Table of table
 
-and builtin_func = state -> value list -> unit
+and builtin_func = state -> value list -> value
 
 and value =
   | Value of simple_value
@@ -51,7 +51,9 @@ exception Value_call of simple_value
 exception Invalid_value
 exception Unreachable
 
-let rec lua_print (state : state) (vals : value list) =
+let drop x = ()
+
+let rec lua_print (state : state) (vals : value list) : value =
   match vals with
   | v :: rest -> begin
       begin
@@ -76,7 +78,10 @@ let rec lua_print (state : state) (vals : value list) =
         ();
       lua_print state rest
     end
-  | [] -> print_endline ""
+  | [] -> begin
+      print_endline "";
+      Value Nil
+    end
 
 let get_num_val = function
   | Value (Number n) -> n
@@ -90,6 +95,10 @@ let get_bool_val = function
 let neg_val = function
   | Value False | Value Nil -> Value True
   | _ -> Value False
+
+let bool_of_val = function
+  | Value Nil | Value False -> false
+  | other -> true
 
 let rec exec_binop (op : binary_op) (e1 : value) (e2 : value) : value
     =
