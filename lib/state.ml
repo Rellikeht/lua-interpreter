@@ -59,6 +59,9 @@ let set_local (state : state) (name : name) (v : value) =
     in
     Hashtbl.set level ~key:name ~data:v
 
+let set_global (state : state) (name : name) (v : value) =
+  Hashtbl.set state.globals ~key:name ~data:v
+
 let add_function
     (state : state)
     (name : funcname)

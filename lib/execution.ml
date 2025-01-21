@@ -14,7 +14,30 @@ and update_locals
     (state : state)
     (names : name list)
     (exps : exp list) =
-  ()
+  let rec update_names names exps =
+    begin
+      match names with
+      | [] ->
+          List.iter exps ~f:(fun e ->
+              let _ = exec_exp state e in
+              ())
+      | name :: names_left ->
+          let v, exps_left =
+            match exps with
+            | [] -> (Value Nil, [])
+            | e :: exps_left -> (exec_exp state e, exps_left)
+          in
+          set_local state name v;
+          update_names names_left exps_left
+    end
+  in
+  update_names names exps
+
+and update_globals
+    (state : state)
+    (names : name list)
+    (exps : exp list) =
+  raise Unimplemented
 (*   match state.locals |> List.hd with *)
 (*   | None -> () *)
 (*   | Some locals -> begin *)
@@ -32,6 +55,19 @@ and update_locals
 (*         end *)
 (*     end *)
 
+and update_vars (state : state) (vars : var list) (vals : exp list) =
+  raise Unimplemented
+
+and get_var (state : state) (var : var) =
+  match var with
+  | Named name -> begin
+      match get_value state name with
+      | None -> Value Nil
+      | Some other -> other
+    end
+  | Index (name, exp) -> raise Unimplemented
+  | Prefix (n1, n2) -> raise Unimplemented
+
 and exec_exp (state : state) (e : exp) =
   match e with
   | Nil | Vararg -> Value Nil
@@ -47,7 +83,7 @@ and exec_exp (state : state) (e : exp) =
   | Func f -> raise Unimplemented
   | Prefixexp p -> begin
       match p with
-      | Var v -> raise Unimplemented
+      | Var name -> get_var state name
       | Call f -> raise Unimplemented
       | Exp e -> exec_exp state e
     end
@@ -61,44 +97,22 @@ and call_builtin
 
 and call_func (state : state) (funcall : function_call) =
   match funcall with
-  (* *)
   | Function (var, args) -> begin
-      match var with
-      (* *)
-      | Named name ->
-          ( (* match state.locals |> List.hd with *)
-            (* | None -> begin *)
-            (*     match Hashtbl.find state.globals name with *)
-            (*     | None -> raise Nil_Call *)
-            (*     | Some (Builtin f) -> call_builtin f state args *)
-            (*     | Some (Function f) -> raise Unimplemented *)
-            (*     | Some (Value v) -> raise (Value_call v) *)
-            (*   end *)
-            (* | Some locals -> begin *)
-            (*     match Hashtbl.find locals name with *)
-            (*     | None -> begin *)
-            (*         match Hashtbl.find state.globals name with *)
-            (*         | None -> raise Nil_Call *)
-            (*         | Some (Builtin f) -> call_builtin f state args *)
-            (*         | Some (Function f) -> raise Unimplemented *)
-            (*         | Some (Value v) -> raise (Value_call v) *)
-            (*       end *)
-            (*     | Some (Builtin f) -> raise Unreachable *)
-            (*     | Some (Function f) -> raise Unimplemented *)
-            (*     | Some (Value v) -> raise (Value_call v) *)
-            (*   end *) )
-      | Index _ | Prefix _ -> raise Unimplemented
+      match get_var state var with
+      | Value Nil -> raise Nil_Call
+      | Value v -> raise (Value_call v)
+      | Builtin f -> call_builtin f state args
+      | Function f -> raise Unimplemented
     end
   | Method _ -> raise Unimplemented
 
 and exec_last (state : state) = function
-  (* *)
   | Break -> state.breaking <- true (* TODO is that it ? *)
   | Return _ -> state.returning <- true
 
 and exec_statement (state : state) (stmt : statement) =
   match stmt with
-  | Assignment (names, vals) -> raise Unimplemented
+  | Assignment (vars, vals) -> update_vars state vars vals
   | Call funcall -> call_func state funcall
   | Do block -> exec_chunk state block
   | While (cond, body) -> raise Unimplemented
@@ -120,10 +134,7 @@ and exec_statements
       exec_statement state statement;
       exec_statements state rest last
   | [] -> begin
-      match last with
-      (* *)
-      | None -> ()
-      | Some last -> exec_last state last
+      match last with None -> () | Some last -> exec_last state last
     end
 
 and exec_chunk (state : state) = function
