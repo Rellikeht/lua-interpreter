@@ -3,8 +3,12 @@ open Values
 open State
 open Base
 
-let rec parse_table (state : state) (table : field list) =
-  raise Unimplemented
+let rec parse_table (state : state) (fields : field list) : table =
+  let initial : table = Hashtbl.create (module Value) in
+  match fields with
+  (* *)
+  | [] -> initial
+  | _ -> raise Unimplemented
 
 and exec_exp (state : state) (e : exp) =
   match e with
@@ -16,6 +20,7 @@ and exec_exp (state : state) (e : exp) =
   | Table t -> Value (Table (parse_table state t))
   | BinaryOp (op, e1, e2) ->
       exec_binop op (exec_exp state e1) (exec_exp state e2)
+  | UnaryOp (op, ex) -> exec_unop op (exec_exp state ex)
   (* | Func f -> call_func s f *)
   | _ -> raise Unimplemented
 
