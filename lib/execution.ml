@@ -1,10 +1,10 @@
 open Ast
+open Values
 open State
 open Base
 
-exception Unimplemented
-
-let rec parse_table (state : state) (table : field list) = raise Unimplemented
+let rec parse_table (state : state) (table : field list) =
+  raise Unimplemented
 
 and exec_exp (state : state) (e : exp) =
   match e with
@@ -14,25 +14,33 @@ and exec_exp (state : state) (e : exp) =
   | Number n -> Value (Number n)
   | String s -> Value (String s)
   | Table t -> Value (Table (parse_table state t))
+  | BinaryOp (op, e1, e2) ->
+      exec_binop op (exec_exp state e1) (exec_exp state e2)
   (* | Func f -> call_func s f *)
   | _ -> raise Unimplemented
 
-and call_builtin (func : builtin_func) (state : state) (args : exp list) =
+and call_builtin
+    (func : builtin_func)
+    (state : state)
+    (args : exp list) =
   let args = List.map ~f:(exec_exp state) args in
   func state args
 
 and call_func (state : state) (funcall : function_call) =
   match funcall with
   (* *)
-  | Function (var, args) -> (
+  | Function (var, args) -> begin
       match var with
       (* *)
-      | Named name -> (
+      | Named name -> begin
           match Hashtbl.find state.symbols name with
-          | None -> raise Unimplemented (* TODO raise *)
+          | None -> raise Nil_Call
           | Some (Builtin f) -> call_builtin f state args
-          | _ -> ())
-      | _ -> ())
+          | Some (Function f) -> raise Unimplemented
+          | Some (Value v) -> raise (Value_call v)
+        end
+      | _ -> ()
+    end
   | _ -> ()
 
 and exec_last (state : state) = function
@@ -55,17 +63,20 @@ and exec_statement (state : state) (stmt : statement) =
       update_locals state [ name ] [ Func funcbody ]
   | Local (names, exps) -> update_locals state names exps
 
-and exec_statements (state : state) (stmts : statement list)
+and exec_statements
+    (state : state)
+    (stmts : statement list)
     (last : last_statement option) =
   match stmts with
   | statement :: rest ->
       exec_statement state statement;
       exec_statements state rest last
-  | [] -> (
+  | [] -> begin
       match last with
       (* *)
       | None -> ()
-      | Some last -> exec_last state last)
+      | Some last -> exec_last state last
+    end
 
 and exec_chunk (state : state) = function
   | Statements stmts -> exec_statements state stmts None

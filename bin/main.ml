@@ -7,4 +7,31 @@ if Array.length Sys.argv < 2 then (
   exit 1)
 ;;
 
-Printing.dump_tree ~tokens:true filename
+let file = open_in filename in
+let lexbuf = Lexing.from_channel file in
+try
+  let ast = Parser.program Lexer.token lexbuf in
+  close_in file;
+  print_endline "Successfully parsed Lua file:";
+  Ast.show_program ast |> print_endline;
+  print_newline ();
+  Execution.exec_block (State.initial_state ()) ast
+with
+| Failure msg ->
+    close_in file;
+    Printf.fprintf stderr "Lexer error: %s\n" msg;
+    exit 1
+| Parser.Error ->
+    close_in file;
+    let curr_pos = lexbuf.Lexing.lex_curr_p in
+    Printf.fprintf stderr "Parser error at line %d, column %d\n"
+      curr_pos.Lexing.pos_lnum
+      (curr_pos.Lexing.pos_cnum - curr_pos.Lexing.pos_bol);
+    exit 1
+| e ->
+    close_in file;
+    Printf.fprintf stderr "Unexpected error: %s\n"
+      (Printexc.to_string e);
+    exit 1
+
+(* Printing.dump_tree ~tokens:true filename *)

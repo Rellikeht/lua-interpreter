@@ -6,7 +6,7 @@
 
 (library
  (name interpreter)
- (modules parser lexer ast printing token execution state)
+ (modules parser lexer ast printing token execution state values)
  (preprocess
   (pps ppx_show))
  ; (preprocess
