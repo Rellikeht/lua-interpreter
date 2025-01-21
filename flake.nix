@@ -25,12 +25,10 @@
   in
     flib.eachSystem systems (system: let
       pkgs = nixpkgs.legacyPackages.${system};
-      lib = pkgs.lib;
-      name = "lua-interpreter";
-      src = self;
     in {
       packages = {
         default = import ./default.nix {inherit pkgs;};
+        lua = import ./lua.nix {inherit pkgs;};
       };
     });
 }
