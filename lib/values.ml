@@ -18,11 +18,15 @@ and value =
   | Builtin of builtin_func
 
 and table = (value, value) Hashtbl.t
+and symbols = (name, value) Hashtbl.t
 
 and state = {
   (* *)
-  mutable line : int;
-  symbols : (name, value) Hashtbl.t;
+  (* mutable line : int; *)
+  globals : symbols;
+  mutable locals : symbols list;
+  mutable breaking : bool;
+  mutable returning : bool;
 }
 
 module Value = struct
@@ -45,6 +49,7 @@ exception Nil_Call
 exception Nil_Index
 exception Value_call of simple_value
 exception Invalid_value
+exception Unreachable
 
 let rec lua_print (state : state) (vals : value list) =
   match vals with

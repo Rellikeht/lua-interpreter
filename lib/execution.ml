@@ -10,6 +10,28 @@ let rec parse_table (state : state) (fields : field list) : table =
   | [] -> initial
   | _ -> raise Unimplemented
 
+and update_locals
+    (state : state)
+    (names : name list)
+    (exps : exp list) =
+  ()
+(*   match state.locals |> List.hd with *)
+(*   | None -> () *)
+(*   | Some locals -> begin *)
+(*       match exps with *)
+(*       | [] -> () *)
+(*       | exp :: exps -> begin *)
+(*           match names with *)
+(*           | [] -> *)
+(*               List.iter exps ~f:(fun e -> *)
+(*                   let _ = exec_exp state e in *)
+(*                   ()) *)
+(*           | name :: rest -> *)
+(*           let value = exec_exp state in *)
+(*           Hashtbl. *)
+(*         end *)
+(*     end *)
+
 and exec_exp (state : state) (e : exp) =
   match e with
   | Nil | Vararg -> Value Nil
@@ -21,8 +43,14 @@ and exec_exp (state : state) (e : exp) =
   | BinaryOp (op, e1, e2) ->
       exec_binop op (exec_exp state e1) (exec_exp state e2)
   | UnaryOp (op, ex) -> exec_unop op (exec_exp state ex)
-  (* | Func f -> call_func s f *)
-  | _ -> raise Unimplemented
+  (* | Func f -> call_func state f *)
+  | Func f -> raise Unimplemented
+  | Prefixexp p -> begin
+      match p with
+      | Var v -> raise Unimplemented
+      | Call f -> raise Unimplemented
+      | Exp e -> exec_exp state e
+    end
 
 and call_builtin
     (func : builtin_func)
@@ -37,21 +65,36 @@ and call_func (state : state) (funcall : function_call) =
   | Function (var, args) -> begin
       match var with
       (* *)
-      | Named name -> begin
-          match Hashtbl.find state.symbols name with
-          | None -> raise Nil_Call
-          | Some (Builtin f) -> call_builtin f state args
-          | Some (Function f) -> raise Unimplemented
-          | Some (Value v) -> raise (Value_call v)
-        end
-      | _ -> ()
+      | Named name ->
+          ( (* match state.locals |> List.hd with *)
+            (* | None -> begin *)
+            (*     match Hashtbl.find state.globals name with *)
+            (*     | None -> raise Nil_Call *)
+            (*     | Some (Builtin f) -> call_builtin f state args *)
+            (*     | Some (Function f) -> raise Unimplemented *)
+            (*     | Some (Value v) -> raise (Value_call v) *)
+            (*   end *)
+            (* | Some locals -> begin *)
+            (*     match Hashtbl.find locals name with *)
+            (*     | None -> begin *)
+            (*         match Hashtbl.find state.globals name with *)
+            (*         | None -> raise Nil_Call *)
+            (*         | Some (Builtin f) -> call_builtin f state args *)
+            (*         | Some (Function f) -> raise Unimplemented *)
+            (*         | Some (Value v) -> raise (Value_call v) *)
+            (*       end *)
+            (*     | Some (Builtin f) -> raise Unreachable *)
+            (*     | Some (Function f) -> raise Unimplemented *)
+            (*     | Some (Value v) -> raise (Value_call v) *)
+            (*   end *) )
+      | Index _ | Prefix _ -> raise Unimplemented
     end
-  | _ -> ()
+  | Method _ -> raise Unimplemented
 
 and exec_last (state : state) = function
   (* *)
-  | Break -> raise Unimplemented
-  | Return _ -> raise Unimplemented
+  | Break -> state.breaking <- true (* TODO is that it ? *)
+  | Return _ -> state.returning <- true
 
 and exec_statement (state : state) (stmt : statement) =
   match stmt with
