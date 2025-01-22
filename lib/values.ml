@@ -15,6 +15,7 @@ and builtin_func = state -> value list -> value
 and value =
   | Value of simple_value
   | Function of chunk
+  (* | Function of parameter_list * chunk *)
   | Builtin of builtin_func
 
 and table = (value, value) Hashtbl.t

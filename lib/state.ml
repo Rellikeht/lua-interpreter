@@ -3,6 +3,9 @@ open Values
 open Base
 module Name = String
 
+(* for debug *)
+open Stdio
+
 let fresh_level () = Hashtbl.create (module Name)
 
 let initial_symbols : (name, value) Hashtbl.t =
@@ -17,7 +20,7 @@ let initial_state () =
     (* *)
     (* line = 0; *)
     globals = Hashtbl.copy initial_symbols;
-    locals = [ fresh_level () ];
+    locals = [];
     breaking = false;
     returning = false;
   }
@@ -41,7 +44,7 @@ let set_value (state : state) (name : name) (value : value) : unit =
     | level :: rest -> begin
         match Hashtbl.find level name with
         | Some v -> begin
-            Hashtbl.set level ~key:name ~data:v;
+            Hashtbl.set level ~key:name ~data:value;
             true
           end
         | None -> set_local rest
