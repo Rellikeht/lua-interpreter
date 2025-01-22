@@ -17,12 +17,12 @@ let initial_symbols : (name, value) Hashtbl.t =
 
 let initial_state () =
   {
-    (* *)
     (* line = 0; *)
     globals = Hashtbl.copy initial_symbols;
     locals = [];
     breaking = false;
     returning = false;
+    returned = [];
   }
 
 let get_value (state : state) (name : name) : value option =
@@ -55,13 +55,25 @@ let set_value (state : state) (name : name) (value : value) : unit =
   else
     Hashtbl.set state.globals ~key:name ~data:value
 
-let set_local (state : state) (name : name) (v : value) =
-  match state.locals |> List.hd with
-  | None -> raise Unreachable
-  | Some level -> Hashtbl.set level ~key:name ~data:v
+let rec update_level
+    (level : symbols)
+    (names : name list)
+    (values : value list) : unit =
+  match names with
+  | [] -> ()
+  | name :: names_left -> begin
+      match values with
+      | [] -> ()
+      | value :: values_left -> begin
+          Hashtbl.set level ~key:name ~data:value;
+          update_level level names_left values_left
+        end
+    end
 
 let add_function
     (state : state)
-    (name : funcname)
-    (body : parameter_list * chunk) =
-  ()
+    ((base, fields, mname) : funcname)
+    ((params, body) : funcbody) =
+  Hashtbl.set state.globals ~key:base ~data:(Function (params, body))
+
+(* *)

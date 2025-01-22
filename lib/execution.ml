@@ -13,21 +13,6 @@ let rec parse_table (state : state) (fields : field list) : table =
   | [] -> initial
   | _ -> raise Unimplemented
 
-and update_locals
-    (state : state)
-    (names : name list)
-    (values : value list) : unit =
-  match names with
-  | [] -> ()
-  | name :: names_left -> begin
-      match values with
-      | [] -> ()
-      | value :: values_left -> begin
-          set_local state name value;
-          update_locals state names_left values_left
-        end
-    end
-
 and update_vars
     (state : state)
     (vars : var list)
@@ -74,36 +59,61 @@ and exec_exp (state : state) (e : exp) : value =
       result
     end
   | UnaryOp (op, ex) -> exec_unop op (exec_exp state ex)
-  | Func (params, body) ->
-      Function body (* TODO wtf parameters omitting *)
+  | Func (params, body) -> Function (params, body)
   | Prefixexp p -> begin
       match p with
       | Var name -> get_var state name
-      | Call f -> call_func state f
+      | Call f ->
+          if call_func state f then begin
+            state.returning <- false;
+            let returned = state.returned in
+            state.returned <- [];
+            match List.hd returned with
+            | None -> Value Nil
+            | Some v -> v
+          end
+          else
+            Value Nil
       | Exp e -> exec_exp state e
     end
 
 and call_builtin
     (func : builtin_func)
     (state : state)
-    (args : exp list) : value =
+    (args : exp list) : bool =
   let args = List.map ~f:(exec_exp state) args in
   func state args
 
-and call_func (state : state) (funcall : function_call) : value =
+and call_func (state : state) (funcall : function_call) : bool =
   match funcall with
   | Function (var, args) -> begin
       match get_var state var with
       | Value Nil -> raise Nil_Call
       | Value v -> raise (Value_call v)
       | Builtin f -> call_builtin f state args
-      | Function f -> raise Unimplemented
+      | Function (params, body) -> begin
+          let level = fresh_level () in
+          let args = List.map ~f:(exec_exp state) args in
+          begin
+            match params with
+            | List names -> update_level level names args
+            | VarargList _ -> raise Unimplemented
+            | Varparam -> raise Unimplemented
+          end;
+          exec_chunk ~level state body;
+          let returning = state.returning in
+          (* state.returning <- false; *)
+          returning
+        end
     end
   | Method _ -> raise Unimplemented
 
 and exec_last (state : state) = function
-  | Break -> state.breaking <- true (* TODO is that it ? *)
-  | Return _ -> state.returning <- true
+  | Break -> state.breaking <- true (* TODO implement that *)
+  | Return values -> begin
+      state.returned <- List.map ~f:(exec_exp state) values;
+      state.returning <- true
+    end
 
 and exec_ifs (state : state) (clauses : elseif list) : bool =
   let rec exec_clauses = function
@@ -154,12 +164,13 @@ and exec_statement (state : state) (stmt : statement) =
   | For (name, start, last, step, body) -> raise Unimplemented
   | ForIn (names, exps, body) -> raise Unimplemented
   | Function (name, body) -> add_function state name body
-  | LocalFunction (name, funcbody) ->
-      raise Unimplemented
-      (* update_locals state [ name ] [ Func funcbody ] *)
+  | LocalFunction (name, (params, body)) ->
+      let locals = List.hd_exn state.locals in
+      update_level locals [ name ] [ Function (params, body) ]
   | Local (names, exps) ->
+      let locals = List.hd_exn state.locals in
       let vals = List.map ~f:(exec_exp state) exps in
-      update_locals state names vals
+      update_level locals names vals
 
 and exec_statements
     (state : state)
@@ -173,15 +184,12 @@ and exec_statements
       match last with None -> () | Some last -> exec_last state last
     end
 
-and exec_chunk (state : state) (statements : chunk) =
+and exec_chunk
+    ?(level = fresh_level ())
+    (state : state)
+    (statements : chunk) : unit =
   begin
-    state.locals <- fresh_level () :: state.locals;
-    (* state.locals |> List.length |> Int.to_string |> print_endline; *)
-    (* print_endline "start"; *)
-    (* state.locals *)
-    (* |> List.map ~f:(fun t -> Hashtbl.length t |> Int.to_string) *)
-    (* |> List.iter ~f:print_endline; *)
-    (* print_endline "end"; *)
+    state.locals <- level :: state.locals;
     begin
       match statements with
       | Statements stmts -> exec_statements state stmts None

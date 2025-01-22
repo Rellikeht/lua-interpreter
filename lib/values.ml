@@ -10,12 +10,12 @@ type simple_value =
   | String of string
   | Table of table
 
-and builtin_func = state -> value list -> value
+and builtin_func = state -> value list -> bool
 
 and value =
   | Value of simple_value
-  | Function of chunk
-  (* | Function of parameter_list * chunk *)
+  (* | Retruned *)
+  | Function of parameter_list * chunk
   | Builtin of builtin_func
 
 and table = (value, value) Hashtbl.t
@@ -28,6 +28,7 @@ and state = {
   mutable locals : symbols list;
   mutable breaking : bool;
   mutable returning : bool;
+  mutable returned : value list;
 }
 
 module Value = struct
@@ -54,7 +55,14 @@ exception Unreachable
 
 let drop x = ()
 
-let rec lua_print (state : state) (vals : value list) : value =
+let get_returned (state : state) : value list =
+  let returned = state.returned in
+  begin
+    state.returned <- [];
+    returned
+  end
+
+let rec lua_print (state : state) (vals : value list) : bool =
   match vals with
   | v :: rest -> begin
       begin
@@ -71,6 +79,7 @@ let rec lua_print (state : state) (vals : value list) : value =
                   Float.to_string n |> print_string
             | String s -> print_string s
             | Table t -> print_string "table")
+        (* | Retruned -> get_returned state |> lua_print state |> drop *)
         | Function _ | Builtin _ -> print_string "Function"
       end;
       if List.length rest > 0 then
@@ -81,7 +90,7 @@ let rec lua_print (state : state) (vals : value list) : value =
     end
   | [] -> begin
       print_endline "";
-      Value Nil
+      false
     end
 
 let get_num_val = function
@@ -112,6 +121,14 @@ let rec exec_binop (op : binary_op) (e1 : value) (e2 : value) : value
       let v1 = get_num_val e1 in
       let v2 = get_num_val e2 in
       Value (Number (v1 -. v2))
+  | Multiply ->
+      let v1 = get_num_val e1 in
+      let v2 = get_num_val e2 in
+      Value (Number (v1 *. v2))
+  | Divide ->
+      let v1 = get_num_val e1 in
+      let v2 = get_num_val e2 in
+      Value (Number (v1 /. v2))
   | Equal -> is_op Float.( = ) String.( = ) e1 e2
   | NotEqual -> exec_binop Equal e1 e2 |> neg_val
   | Less -> is_op Float.( < ) String.( < ) e1 e2
