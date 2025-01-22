@@ -52,12 +52,10 @@ and exec_exp (state : state) (e : exp) : value =
   | Number n -> Value (Number n)
   | String s -> Value (String s)
   | Table t -> Value (Table (parse_table state t))
-  | BinaryOp (op, e1, e2) -> begin
+  | BinaryOp (op, e1, e2) ->
       let v1 = exec_exp state e1 in
       let v2 = exec_exp state e2 in
-      let result = exec_binop op v1 v2 in
-      result
-    end
+      exec_binop op v1 v2
   | UnaryOp (op, ex) -> exec_unop op (exec_exp state ex)
   | Func (params, body) -> Function (params, body)
   | Prefixexp p -> begin
@@ -109,7 +107,7 @@ and call_func (state : state) (funcall : function_call) : bool =
   | Method _ -> raise Unimplemented
 
 and exec_last (state : state) = function
-  | Break -> state.breaking <- true (* TODO implement that *)
+  | Break -> state.breaking <- true
   | Return values -> begin
       state.returned <- List.map ~f:(exec_exp state) values;
       state.returning <- true
@@ -129,15 +127,61 @@ and exec_ifs (state : state) (clauses : elseif list) : bool =
   exec_clauses clauses
 
 and exec_loop (state : state) (cond : exp) (body : chunk) =
-  (* TODO breaking *)
   begin
     if exec_exp state cond |> bool_of_val then begin
       exec_chunk state body;
-      exec_loop state cond body
+      if state.breaking then
+        state.breaking <- false
+      else
+        exec_loop state cond body
     end
     else
       ()
   end
+
+and exec_for
+    (state : state)
+    (name : name)
+    (start : exp)
+    (last : exp)
+    (step : exp option)
+    (body : chunk) : unit =
+  let start =
+    match exec_exp state start with
+    | Value (Number n) -> n
+    | _ -> raise Invalid_value
+  in
+  let last =
+    match exec_exp state last with
+    | Value (Number n) -> n
+    | _ -> raise Invalid_value
+  in
+  let step =
+    match step with
+    | None -> 1.
+    | Some e -> begin
+        match exec_exp state e with
+        | Value (Number n) -> n
+        | _ -> raise Invalid_value
+      end
+  in
+  if Float.( < ) step 0. then
+    ()
+  else
+    let loop_state = fresh_level () in
+    let rec loop i =
+      if Float.( < ) i last then begin
+        update_level loop_state [ name ] [ Value (Number i) ];
+        exec_chunk ~level:loop_state state body;
+        if state.breaking then
+          state.breaking <- false
+        else
+          loop (i +. step)
+      end
+      else
+        ()
+    in
+    loop start
 
 and exec_statement (state : state) (stmt : statement) =
   match stmt with
@@ -151,7 +195,10 @@ and exec_statement (state : state) (stmt : statement) =
   | While (cond, body) -> exec_loop state cond body
   | Repeat (body, cond) -> begin
       exec_chunk state body;
-      exec_loop state cond body
+      if state.breaking then
+        state.breaking <- false
+      else
+        exec_loop state cond body
     end
   | If (cond, body, elseifs, elseblock) ->
       if exec_ifs state ((cond, body) :: elseifs) then
@@ -161,7 +208,8 @@ and exec_statement (state : state) (stmt : statement) =
         | None -> ()
         | Some block -> exec_chunk state block
       end
-  | For (name, start, last, step, body) -> raise Unimplemented
+  | For (name, start, last, step, body) ->
+      exec_for state name start last step body
   | ForIn (names, exps, body) -> raise Unimplemented
   | Function (name, body) -> add_function state name body
   | LocalFunction (name, (params, body)) ->
@@ -179,7 +227,10 @@ and exec_statements
   match stmts with
   | statement :: rest ->
       exec_statement state statement;
-      exec_statements state rest last
+      if state.returning || state.breaking then
+        ()
+      else
+        exec_statements state rest last
   | [] -> begin
       match last with None -> () | Some last -> exec_last state last
     end
@@ -198,6 +249,6 @@ and exec_chunk
     state.locals <- List.tl_exn state.locals
   end
 
-and exec_block s c = exec_chunk s c
+(* and exec_block s c = exec_chunk s c *)
 
 let execute = exec_chunk (initial_state ())

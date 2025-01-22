@@ -12,10 +12,10 @@ let lexbuf = Lexing.from_channel file in
 try
   let ast = Parser.program Lexer.token lexbuf in
   close_in file;
-  print_endline "Successfully parsed Lua file:";
-  Ast.show_program ast |> print_endline;
-  print_newline ();
-  Execution.exec_block (State.initial_state ()) ast
+  (* print_endline "Successfully parsed Lua file:"; *)
+  (* Ast.show_program ast |> print_endline; *)
+  (* print_newline (); *)
+  Execution.execute ast
 with
 | Failure msg ->
     close_in file;

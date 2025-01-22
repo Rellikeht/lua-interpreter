@@ -3,9 +3,6 @@ open Values
 open Base
 module Name = String
 
-(* for debug *)
-open Stdio
-
 let fresh_level () = Hashtbl.create (module Name)
 
 let initial_symbols : (name, value) Hashtbl.t =
