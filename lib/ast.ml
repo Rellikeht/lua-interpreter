@@ -4,14 +4,18 @@ type number_value = float [@@deriving show]
 (* Name = "[_a-zA-Z][_a-zA-Z0-9]*" *)
 type name = string [@@deriving show]
 
+(* *)
+type position = int * int
+
 (* funcname = Name {"." Name} [":" Name] *)
 type funcname = name * name list * name option [@@deriving show]
 
-(* Those are just lists, so don't need separate type *)
+(* Those are just aliases, so they don't need separate type *)
 (* tableconstructor = "{" [fieldlist] "}" *)
 (* varlist = var {"," var} *)
 (* namelist = Name {"," Name} *)
 (* explist = {exp ","} exp *)
+(* block = chunk *)
 
 (* parlist = namelist ["," "..."] | "..." *)
 type parameter_list =
@@ -55,9 +59,6 @@ type chunk =
   | Ended of statement list * last_statement
 [@@deriving show]
 
-(* block = chunk *)
-and block = chunk [@@deriving show]
-
 and field =
   (* field = "[" exp "]" "=" exp | *)
   | Indexed of exp * exp
@@ -68,7 +69,7 @@ and field =
 [@@deriving show]
 
 (* funcbody = "(" [parlist] ")" block "end" *)
-and funcbody = parameter_list * block [@@deriving show]
+and funcbody = parameter_list * chunk [@@deriving show]
 and args = exp list
 
 and function_call =
@@ -132,17 +133,17 @@ and statement =
   (* functioncall | *)
   | Call of function_call
   (* "do" block "end" | *)
-  | Do of block
+  | Do of chunk
   (* "while" exp "do" block "end" | *)
-  | While of exp * block
+  | While of exp * chunk
   (* "repeat" block "until" exp | *)
-  | Repeat of block * exp
+  | Repeat of chunk * exp
   (* "if" exp "then" block {"elseif" exp "then" block} ["else" block] "end" | *)
-  | If of exp * block * elseif list * block option
+  | If of exp * chunk * elseif list * chunk option
   (* "for" Name "=" exp "," exp ["," exp] "do" block "end" | *)
-  | For of name * exp * exp * exp option * block
+  | For of name * exp * exp * exp option * chunk
   (* "for" namelist "in" explist "do" block "end" | *)
-  | ForIn of name list * exp list * block
+  | ForIn of name list * exp list * chunk
   (* "function" funcname funcbody | *)
   | Function of funcname * funcbody
   (* "local" "function" Name funcbody | *)
@@ -152,6 +153,6 @@ and statement =
 [@@deriving show]
 
 (* "if" exp "then" block {"elseif" exp "then" block} ["else" block] "end" | *)
-and elseif = exp * block [@@deriving show]
+and elseif = exp * chunk [@@deriving show]
 
 type program = chunk [@@deriving show]

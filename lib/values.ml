@@ -14,7 +14,6 @@ and builtin_func = state -> value list -> bool
 
 and value =
   | Value of simple_value
-  (* | Retruned *)
   | Function of parameter_list * chunk
   | Builtin of builtin_func
 
@@ -79,7 +78,6 @@ let rec lua_print (state : state) (vals : value list) : bool =
                   Float.to_string n |> print_string
             | String s -> print_string s
             | Table t -> print_string "table")
-        (* | Retruned -> get_returned state |> lua_print state |> drop *)
         | Function _ | Builtin _ -> print_string "Function"
       end;
       if List.length rest > 0 then

@@ -249,6 +249,4 @@ and exec_chunk
     state.locals <- List.tl_exn state.locals
   end
 
-(* and exec_block s c = exec_chunk s c *)
-
 let execute = exec_chunk (initial_state ())

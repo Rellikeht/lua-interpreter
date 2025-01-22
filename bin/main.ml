@@ -33,5 +33,3 @@ with
     Printf.fprintf stderr "Unexpected error: %s\n"
       (Printexc.to_string e);
     exit 1
-
-(* Printing.dump_tree ~tokens:true filename *)

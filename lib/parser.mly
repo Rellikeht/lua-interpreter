@@ -42,11 +42,6 @@ chunk:
 ;
 
 (* can be inline *)
-block:
-  | b = chunk { b }
-;
-
-(* can be inline *)
 laststat:
   | RETURN e = separated_list(COMMA, exp) { Return e }
   | BREAK { Break }
@@ -56,16 +51,16 @@ stat:
   | v = separated_nonempty_list(COMMA, var) ASSIGN
     e = separated_nonempty_list(COMMA, exp) { Assignment (v, e) }
   | f = functioncall { Call f }
-  | DO b = block END { Do b }
-  | WHILE e = exp DO b = block END { While (e, b) }
-  | REPEAT b = block UNTIL e = exp { Repeat (b, e) }
-  | IF e = exp THEN b = block el = list(elseif_block) els = option(else_block) END
+  | DO b = chunk END { Do b }
+  | WHILE e = exp DO b = chunk END { While (e, b) }
+  | REPEAT b = chunk UNTIL e = exp { Repeat (b, e) }
+  | IF e = exp THEN b = chunk el = list(elseif_block) els = option(else_block) END
     { If (e, b, el, els) }
-  | FOR n = NAME ASSIGN e1 = exp COMMA e2 = exp e3 = option(preceded(COMMA, exp)) DO b = block END
+  | FOR n = NAME ASSIGN e1 = exp COMMA e2 = exp e3 = option(preceded(COMMA, exp)) DO b = chunk END
     { For (n, e1, e2, e3, b) }
   | FOR nl = separated_nonempty_list(COMMA, NAME)
     IN el = separated_nonempty_list(COMMA, exp)
-    DO b = block END
+    DO b = chunk END
     { ForIn (nl, el, b) }
   | FUNCTION fn = funcname fb = funcbody { Function (fn, fb) }
   | LOCAL FUNCTION n = NAME fb = funcbody { LocalFunction (n, fb) }
@@ -75,12 +70,12 @@ stat:
 
 (* can be inline *)
 elseif_block:
-  | ELSEIF e = exp THEN b = block { (e, b) }
+  | ELSEIF e = exp THEN b = chunk { (e, b) }
 ;
 
 (* can be inline *)
 else_block:
-  | ELSE b = block { b }
+  | ELSE b = chunk { b }
 ;
 
 (* can be inline *)
@@ -130,7 +125,7 @@ args:
 
 (* can be inline *)
 funcbody:
-  | LPAREN pl = parlist RPAREN b = block END { (pl, b) }
+  | LPAREN pl = parlist RPAREN b = chunk END { (pl, b) }
 ;
 
 (* can be inline *)
