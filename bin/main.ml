@@ -12,7 +12,6 @@ let lexbuf = Lexing.from_channel file in
 try
   let ast = Parser.program Lexer.token lexbuf in
   close_in file;
-  (* print_endline "Successfully parsed Lua file:"; *)
   (* Ast.show_program ast |> print_endline; *)
   (* print_newline (); *)
   Execution.execute ast
@@ -27,6 +26,11 @@ with
     Printf.fprintf stderr "Parser error at line %d, column %d\n"
       curr_pos.Lexing.pos_lnum
       (curr_pos.Lexing.pos_cnum - curr_pos.Lexing.pos_bol);
+    exit 1
+| Values.Lua_error v ->
+    close_in file;
+    print_string "Lua error: ";
+    v |> Values.string_of_value |> print_endline;
     exit 1
 | e ->
     close_in file;

@@ -62,25 +62,26 @@ let get_returned (state : state) : value list =
     returned
   end
 
+let string_of_value (value : value) : string =
+  match value with
+  | Value v -> (
+      match v with
+      | Nil -> "nil"
+      | True -> "true"
+      | False -> "false"
+      | Number n ->
+          if Float.is_integer n then
+            Float.to_int n |> Int.to_string
+          else
+            Float.to_string n
+      | String s -> s
+      | Table t -> "table")
+  | Function _ | Builtin _ -> "Function"
+
 let rec lua_print (state : state) (vals : value list) : bool =
   match vals with
   | v :: rest -> begin
-      begin
-        match v with
-        | Value v -> (
-            match v with
-            | Nil -> print_string "nil"
-            | True -> print_string "true"
-            | False -> print_string "false"
-            | Number n ->
-                if Float.is_integer n then
-                  Float.to_int n |> Int.to_string |> print_string
-                else
-                  Float.to_string n |> print_string
-            | String s -> print_string s
-            | Table t -> print_string "table")
-        | Function _ | Builtin _ -> print_string "Function"
-      end;
+      string_of_value v |> print_string;
       if List.length rest > 0 then
         print_string "\t"
       else

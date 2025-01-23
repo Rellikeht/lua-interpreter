@@ -12,7 +12,7 @@ end
 
 I = 0
 while true do
-  if FibR(I) > 10000 then break end
+  if FibR(I) > 1000 then error("a") end
   print(FibR(I))
   I = I + 1
 end

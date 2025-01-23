@@ -7,10 +7,11 @@ let fresh_level () = Hashtbl.create (module Name)
 
 let initial_symbols : (name, value) Hashtbl.t =
   let symbols = fresh_level () in
-  let _ =
-    Hashtbl.add symbols ~key:"print" ~data:(Builtin lua_print)
-  in
-  symbols
+  begin
+    Hashtbl.add symbols ~key:"print" ~data:(Builtin lua_print) |> drop;
+    Hashtbl.add symbols ~key:"error" ~data:(Builtin lua_error) |> drop;
+    symbols
+  end
 
 let initial_state () =
   {
