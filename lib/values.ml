@@ -51,6 +51,7 @@ exception Nil_Index
 exception Value_call of simple_value
 exception Invalid_value
 exception Unreachable
+exception Lua_error of value
 
 let drop x = ()
 
@@ -90,6 +91,10 @@ let rec lua_print (state : state) (vals : value list) : bool =
       print_endline "";
       false
     end
+
+let lua_error (state : state) (vals : value list) : bool =
+  let value = match vals with [] -> Value Nil | v :: _ -> v in
+  raise (Lua_error value)
 
 let get_num_val = function
   | Value (Number n) -> n
@@ -134,7 +139,6 @@ let rec exec_binop (op : binary_op) (e1 : value) (e2 : value) : value
   | Greater -> exec_binop LessEqual e2 e1
   | GreaterEqual -> exec_binop Less e2 e1
   | And -> begin
-      (* print_endline "AND"; *)
       match get_bool_val e1 with
       | Value False -> Value False
       | _ -> get_bool_val e2

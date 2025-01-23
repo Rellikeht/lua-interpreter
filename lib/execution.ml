@@ -2,8 +2,6 @@ open Ast
 open Values
 open State
 open Base
-
-(* for debug *)
 open Stdio
 
 let rec parse_table (state : state) (fields : field list) : table =
@@ -100,7 +98,7 @@ and call_func (state : state) (funcall : function_call) : bool =
           end;
           exec_chunk ~level state body;
           let returning = state.returning in
-          (* state.returning <- false; *)
+          state.returning <- false;
           returning
         end
     end
@@ -165,12 +163,18 @@ and exec_for
         | _ -> raise Invalid_value
       end
   in
-  if Float.( < ) step 0. then
+  if Float.( = ) step 0. then
     ()
   else
+    let comp =
+      if Float.( < ) step 0. then
+        Float.( >= )
+      else
+        Float.( <= )
+    in
     let loop_state = fresh_level () in
     let rec loop i =
-      if Float.( < ) i last then begin
+      if comp i last then begin
         update_level loop_state [ name ] [ Value (Number i) ];
         exec_chunk ~level:loop_state state body;
         if state.breaking then
