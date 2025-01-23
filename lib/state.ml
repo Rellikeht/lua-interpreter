@@ -10,12 +10,13 @@ let initial_symbols : (name, value) Hashtbl.t =
   begin
     Hashtbl.add symbols ~key:"print" ~data:(Builtin lua_print) |> drop;
     Hashtbl.add symbols ~key:"error" ~data:(Builtin lua_error) |> drop;
+    Hashtbl.add symbols ~key:"pcall" ~data:(Builtin lua_pcall) |> drop;
     symbols
   end
 
 let initial_state () =
   {
-    (* line = 0; *)
+    line = 0;
     globals = Hashtbl.copy initial_symbols;
     locals = [];
     breaking = false;

@@ -21,8 +21,7 @@ and table = (value, value) Hashtbl.t
 and symbols = (name, value) Hashtbl.t
 
 and state = {
-  (* *)
-  (* mutable line : int; *)
+  mutable line : int;
   globals : symbols;
   mutable locals : symbols list;
   mutable breaking : bool;
@@ -96,6 +95,9 @@ let rec lua_print (state : state) (vals : value list) : bool =
 let lua_error (state : state) (vals : value list) : bool =
   let value = match vals with [] -> Value Nil | v :: _ -> v in
   raise (Lua_error value)
+
+let lua_pcall (state : state) (vals : value list) : bool =
+  raise Unimplemented
 
 let get_num_val = function
   | Value (Number n) -> n

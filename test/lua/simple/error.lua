@@ -10,9 +10,14 @@ function FibR(n)
   return helper(n)
 end
 
-I = 0
-while true do
-  if FibR(I) > 1000 then error("a") end
-  print(FibR(I))
-  I = I + 1
+function Loop()
+  local i = 0
+  while true do
+    if FibR(i) > 1000 then error("a") end
+    print(FibR(i))
+    i = i + 1
+  end
 end
+
+pcall(Loop)
+print("pcalled")

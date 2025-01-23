@@ -9,7 +9,12 @@ let rec parse_table (state : state) (fields : field list) : table =
   match fields with
   (* *)
   | [] -> initial
-  | _ -> raise Unimplemented
+  | field :: rest -> begin
+      match field with
+      | Indexed (index, value) -> raise Unimplemented
+      | Named (name, value) -> raise Unimplemented
+      | Free value -> raise Unimplemented
+    end
 
 and update_vars
     (state : state)
@@ -130,6 +135,8 @@ and exec_loop (state : state) (cond : exp) (body : chunk) =
       exec_chunk state body;
       if state.breaking then
         state.breaking <- false
+      else if state.returning then
+        ()
       else
         exec_loop state cond body
     end
@@ -179,6 +186,8 @@ and exec_for
         exec_chunk ~level:loop_state state body;
         if state.breaking then
           state.breaking <- false
+        else if state.returning then
+          ()
         else
           loop (i +. step)
       end
